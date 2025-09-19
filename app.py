@@ -20,3 +20,9 @@ st.markdown("---")
 
 # Exibe a segunda imagem
 st.image(image_2)
+
+# Cria uma coluna para centralizar o botão
+col1, col2, col3 = st.columns([1,2,1])
+
+with col2:
+    st.link_button("Home da faculdade Socrates", "https://www.socrates.com.br/")
