@@ -1,31 +1,30 @@
 import streamlit as st
 from PIL import Image
 
-# Configuração da página para ocupar a largura total
+# Configuração da página
 st.set_page_config(layout="wide")
 
-# Inicialize o estado da sessão para controlar a exibição da imagem
+# Inicializa o estado da sessão para a imagem atual e o QR Code
+if 'current_image_index' not in st.session_state:
+    st.session_state.current_image_index = 0
 if 'show_qrcode' not in st.session_state:
     st.session_state.show_qrcode = False
 
-# Carregue as imagens
+# Carrega e rotaciona as imagens
 try:
-    image_1 = Image.open("1.png")
-    image_2 = Image.open("2.png")
+    images = [
+        Image.open("1.png").rotate(90, expand=True),
+        Image.open("2.png").rotate(90, expand=True)
+    ]
     qrcode_image = Image.open("qrcode.png")
 except FileNotFoundError:
     st.error("Certifique-se de que os arquivos de imagem estão no mesmo diretório do seu script.")
     st.stop()
 
-# --- Rotacione as imagens em 90 graus usando PIL ---
-rotated_image_1 = image_1.rotate(90, expand=True)
-rotated_image_2 = image_2.rotate(90, expand=True)
-
 # --- Estilos CSS ---
 st.markdown("""
 <style>
-/* Importa uma fonte moderna do Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+/* ... (Seus estilos CSS anteriores, incluindo cores, fontes, etc.) ... */
 
 /* Estilo para a barra divisória personalizada */
 .color-divider {
@@ -67,47 +66,31 @@ st.markdown("""
     font-size: 1.8em;
     font-weight: 700;
     color: #1a237e !important;
-    background-color: #f0f8ff; /* Fundo mais claro */
-    border: 2px solid #1a237e; /* Borda para destacar */
-    border-radius: 10px; /* Borda arredondada */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Sombra suave */
+    background-color: #f0f8ff;
+    border: 2px solid #1a237e;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     padding: 1rem;
     margin-bottom: 1rem;
-    transition: 0.3s; /* Transição suave para o efeito de hover */
+    transition: 0.3s;
 }
 .stButton button:hover {
-    background-color: #e6eef5; /* Fundo mais escuro ao passar o mouse */
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* Sombra mais forte */
+    background-color: #e6eef5;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
-/* Contêiner principal para a rolagem horizontal */
-.scroll-container {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    gap: 10px;
-    padding-bottom: 20px; /* Adiciona padding para evitar que a sombra seja cortada */
+/* Contêiner para a imagem atual */
+.image-container {
+    border: 5px solid #EFEFEF;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    padding: 5px;
+    text-align: center;
+    margin-bottom: 20px;
 }
-
-/* Oculta a barra de rolagem padrão (opcional) */
-.scroll-container::-webkit-scrollbar {
-    display: none;
-}
-.scroll-container {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* Estilos para cada imagem dentro do contêiner COM MOLDURA */
-.scroll-container .stImage img {
-    flex-shrink: 0;
-    width: 100vw;
-    scroll-snap-align: center;
-    border: 5px solid #EFEFEF; /* MOLDURA */
-    border-radius: 10px; /* Cantos arredondados */
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2); /* Sombra */
-    padding: 5px; /* Espaçamento interno */
+.image-container img {
+    max-width: 100%;
+    height: auto;
 }
 
 /* Estilo específico para a imagem do QR Code */
@@ -117,37 +100,41 @@ st.markdown("""
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     padding: 3px;
 }
-
-/* Ajustes para o container Streamlit principal */
-.st-emotion-cache-1ky2q5g {
-    overflow-x: hidden !important;
-    max-width: none !important;
-}
-
-h1, h4, p {
-    transform: none !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Estrutura do App Streamlit ---
+# --- Funções para Navegação ---
+def next_image():
+    """Avança para a próxima imagem, voltando para o início se necessário."""
+    st.session_state.current_image_index = (st.session_state.current_image_index + 1) % len(images)
 
-# Adiciona a linha divisória com cor personalizada
+def prev_image():
+    """Volta para a imagem anterior, indo para o final se necessário."""
+    st.session_state.current_image_index = (st.session_state.current_image_index - 1 + len(images)) % len(images)
+
+# --- Estrutura do App Streamlit ---
 st.markdown('<div class="color-divider"></div>', unsafe_allow_html=True)
 
 # Título centralizado
 st.markdown('<div class="header-container">DOCUMENTO DIGITAL</div>', unsafe_allow_html=True)
 
-# Carrossel (rolagem horizontal)
-st.markdown('<div class="scroll-container">', unsafe_allow_html=True)
-st.image(rotated_image_1, use_container_width=True)
-st.image(rotated_image_2, use_container_width=True)
+# Contêiner para a imagem
+st.markdown('<div class="image-container">', unsafe_allow_html=True)
+st.image(images[st.session_state.current_image_index], use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Barra estilizada separando do resto
+# Controles de navegação
+col_prev, col_spacer, col_next = st.columns([1, 4, 1])
+
+with col_prev:
+    st.button("◀️ Anterior", on_click=prev_image, use_container_width=True)
+with col_next:
+    st.button("Próximo ▶️", on_click=next_image, use_container_width=True)
+
+# Barra estilizada
 st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
 
-# Linha de colunas para os botões
+# Botões de funcionalidade
 col_freq, col_notas, col_qrcode = st.columns(3)
 
 with col_freq:
@@ -160,19 +147,15 @@ with col_qrcode:
     if st.button("QR Code", use_container_width=True):
         st.session_state.show_qrcode = not st.session_state.show_qrcode
 
-# Condicionalmente exibe a imagem do QR Code
 if st.session_state.show_qrcode:
     col_qr_left, col_qr_center, col_qr_right = st.columns([1, 0.5, 1])
     with col_qr_center:
         st.image(qrcode_image, use_container_width=True, caption="QR Code", width=200)
 
-# Barra estilizada separando QR Code do rodapé
 st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
 
-# Texto e link da faculdade
 st.markdown("<p class='link-text'>Volta para a home da faculdade Socrates</p>", unsafe_allow_html=True)
 
-# Centraliza o botão
 col_button = st.columns([1, 0.5, 1])[1]
 with col_button:
     st.link_button("www.socrates.com.br", url="https://www.socrates.com.br/", use_container_width=True)
