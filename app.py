@@ -34,6 +34,15 @@ st.markdown("""
     margin-bottom: 2rem;
 }
 
+/* Barra estilizada extra */
+.styled-bar {
+    margin: 2rem 0;
+    height: 6px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #1a237e, #3949ab, #5c6bc0);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
 /* Estilo para o novo bloco do título e dos novos textos */
 .header-container {
     text-align: center;
@@ -78,6 +87,7 @@ st.markdown("""
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     gap: 10px;
+    padding-bottom: 20px; /* Adiciona padding para evitar que a sombra seja cortada */
 }
 
 /* Oculta a barra de rolagem padrão (opcional) */
@@ -89,14 +99,26 @@ st.markdown("""
     scrollbar-width: none;
 }
 
-/* Estilos para cada imagem dentro do contêiner */
-.scroll-container .stImage {
+/* Estilos para cada imagem dentro do contêiner COM MOLDURA */
+.scroll-container .stImage img {
     flex-shrink: 0;
     width: 100vw;
     scroll-snap-align: center;
+    border: 5px solid #EFEFEF; /* MOLDURA */
+    border-radius: 10px; /* Cantos arredondados */
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2); /* Sombra */
+    padding: 5px; /* Espaçamento interno */
 }
 
-/* Ajustes para o container Streamlit principal (garante a rolagem sem quebrar o layout) */
+/* Estilo específico para a imagem do QR Code */
+.stImage img[src*="data:image/png;base64"] {
+    border: 3px solid #EFEFEF;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 3px;
+}
+
+/* Ajustes para o container Streamlit principal */
 .st-emotion-cache-1ky2q5g {
     overflow-x: hidden !important;
     max-width: none !important;
@@ -105,7 +127,6 @@ st.markdown("""
 h1, h4, p {
     transform: none !important;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -114,17 +135,19 @@ h1, h4, p {
 # Adiciona a linha divisória com cor personalizada
 st.markdown('<div class="color-divider"></div>', unsafe_allow_html=True)
 
-# Título centralizado no novo estilo
+# Título centralizado
 st.markdown('<div class="header-container">DOCUMENTO DIGITAL</div>', unsafe_allow_html=True)
 
-# Usa o contêiner de rolagem horizontal
+# Carrossel (rolagem horizontal)
 st.markdown('<div class="scroll-container">', unsafe_allow_html=True)
 st.image(rotated_image_1, use_container_width=True)
 st.image(rotated_image_2, use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Adiciona uma linha de colunas para os botões
-st.markdown("<p style='text-align: center;'>---</p>", unsafe_allow_html=True)
+# Barra estilizada separando do resto
+st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
+
+# Linha de colunas para os botões
 col_freq, col_notas, col_qrcode = st.columns(3)
 
 with col_freq:
@@ -135,16 +158,19 @@ with col_notas:
         st.write("Notas: Funcionalidade a ser adicionada.")
 with col_qrcode:
     if st.button("QR Code", use_container_width=True):
-        # Inverte o estado para mostrar/ocultar a imagem
         st.session_state.show_qrcode = not st.session_state.show_qrcode
 
 # Condicionalmente exibe a imagem do QR Code
 if st.session_state.show_qrcode:
-    st.image(qrcode_image, use_container_width=False, width=300)
+    col_qr_left, col_qr_center, col_qr_right = st.columns([1, 0.5, 1])
+    with col_qr_center:
+        st.image(qrcode_image, use_container_width=True, caption="QR Code", width=200)
 
-# Adiciona o texto e o link da faculdade
-st.markdown("---")
-st.markdown("<p class='link-text'>Volta para a home da Faculdade Socrates</p>", unsafe_allow_html=True)
+# Barra estilizada separando QR Code do rodapé
+st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
+
+# Texto e link da faculdade
+st.markdown("<p class='link-text'>Volta para a home da faculdade Socrates</p>", unsafe_allow_html=True)
 
 # Centraliza o botão
 col_button = st.columns([1, 0.5, 1])[1]
