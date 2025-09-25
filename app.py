@@ -1,10 +1,10 @@
 import streamlit as st
 from PIL import Image
 
-# Configuração da página
+# --- Configuração da página ---
 st.set_page_config(layout="wide")
 
-# --- CSS Corporativo + Carrossel ---
+# --- CSS Corporativo ---
 st.markdown("""
 <style>
 body { font-family: 'Montserrat', sans-serif; background-color: #f4f6f9; }
@@ -44,10 +44,19 @@ if 'page' not in st.session_state:
     st.session_state.current_image_index = 0
     st.session_state.show_qrcode = False
 
-def go_to_login_page(): st.session_state.page = 'login'
-def go_to_jean_page(): st.session_state.page = 'jean'; st.session_state.current_image_index=0; st.session_state.show_qrcode=False
-def go_to_hayane_page(): st.session_state.page = 'hayane'; st.session_state.current_image_index=0; st.session_state.show_qrcode=False
-def go_to_home_page(): st.session_state.page = 'home'
+# --- Funções de navegação ---
+def go_to_login_page(): 
+    st.session_state.page = 'login'
+def go_to_jean_page(): 
+    st.session_state.page = 'jean'
+    st.session_state.current_image_index = 0
+    st.session_state.show_qrcode = False
+def go_to_hayane_page(): 
+    st.session_state.page = 'hayane'
+    st.session_state.current_image_index = 0
+    st.session_state.show_qrcode = False
+def go_to_home_page(): 
+    st.session_state.page = 'home'
 
 # --- Função com carrossel ---
 def digital_document_page(title, image_files):
@@ -65,6 +74,13 @@ def digital_document_page(title, image_files):
     st.image(images[st.session_state.current_image_index], use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
+    # Botões anterior/próximo
+    col_prev, col_spacer, col_next = st.columns([1,4,1])
+    with col_prev: 
+        st.button("Anterior", on_click=lambda: prev_image(len(images)))
+    with col_next: 
+        st.button("Próximo", on_click=lambda: next_image(len(images)))
+    
     # Miniaturas
     cols = st.columns(len(images))
     for idx, img in enumerate(images):
@@ -72,12 +88,7 @@ def digital_document_page(title, image_files):
             if st.button("", key=f"thumb_{idx}"):
                 st.session_state.current_image_index = idx
             st.image(img, width=80, use_container_width=False)
-    
-    # Botões anterior/próximo
-    col_prev, col_spacer, col_next = st.columns([1,4,1])
-    with col_prev: st.button("Anterior", on_click=lambda: prev_image(len(images)))
-    with col_next: st.button("Próximo", on_click=lambda: next_image(len(images)))
-    
+            
     # Funções auxiliares do carrossel
     def next_image(length):
         st.session_state.current_image_index = (st.session_state.current_image_index + 1) % length
@@ -101,7 +112,7 @@ def digital_document_page(title, image_files):
     st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
     st.button("Voltar", on_click=go_to_login_page)
 
-# --- Página Inicial ---
+# --- Lógica principal das páginas ---
 if st.session_state.page == 'home':
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     try:
@@ -112,18 +123,19 @@ if st.session_state.page == 'home':
         st.stop()
     st.markdown('</div>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1,0.5,1])
-    with col2: st.button("Entrar", on_click=go_to_login_page)
+    with col2:
+        st.button("Entrar", on_click=go_to_login_page)
 
-# --- Página Login ---
 elif st.session_state.page == 'login':
     st.markdown('<div class="header-container">Quem é você?</div>', unsafe_allow_html=True)
     col_jean, col_hayane = st.columns([1,1])
-    with col_jean: st.button("Jean", on_click=go_to_jean_page, use_container_width=True)
-    with col_hayane: st.button("Hayane", on_click=go_to_hayane_page, use_container_width=True)
+    with col_jean:
+        st.button("Jean", on_click=go_to_jean_page, use_container_width=True)
+    with col_hayane:
+        st.button("Hayane", on_click=go_to_hayane_page, use_container_width=True)
     st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
     st.button("Voltar", on_click=go_to_home_page)
 
-# --- Conteúdo ---
 elif st.session_state.page == 'jean':
     digital_document_page("DOCUMENTO DIGITAL", ["1.png","2.png"])
 elif st.session_state.page == 'hayane':
