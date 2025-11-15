@@ -1,12 +1,39 @@
 import streamlit as st
 from PIL import Image
+from io import BytesIO  # <-- ADICIONADO AQUI
+import base64           # <-- ADICIONADO AQUI
 
-# Configuração da página
+# Configuração da página (deve ser a primeira cois do Streamlit)
 st.set_page_config(layout="wide")
 
-# --- Estilos CSS Corporativos ---
+# --- Função de Cache para Imagens ---
+@st.cache_data
+def load_image(image_path, rotate_degrees=0):
+    """
+    Carrega uma imagem do disco, aplica rotação (se necessário) e a mantém em cache.
+    Retorna o objeto de imagem PIL ou None se o arquivo não for encontrado.
+    """
+    try:
+        image = Image.open(image_path)
+        if rotate_degrees != 0:
+            return image.rotate(rotate_degrees, expand=True)
+        return image
+    except FileNotFoundError:
+        st.error(f"Erro: Arquivo de imagem não encontrado em: {image_path}")
+        return None
+
+# --- Função auxiliar para converter imagem (MOVIDA PARA CIMA) ---
+def image_to_base64(image):
+    """Converte um objeto de imagem PIL para string base64."""
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
+
+# --- Estilos CSS Corporativos (Injetados apenas uma vez) ---
 st.markdown("""
 <style>
+/* ... (Todo o seu CSS continua o mesmo, omitido aqui para ser breve) ... */
 /* Corpo da página */
 body {
     font-family: 'Montserrat', sans-serif;
@@ -106,6 +133,7 @@ if 'page' not in st.session_state:
     st.session_state.current_image_index = 0
     st.session_state.show_qrcode = False
 
+# --- Funções de Navegação ---
 def go_to_login_page():
     st.session_state.page = 'login'
 
@@ -119,17 +147,26 @@ def go_to_hayane_page():
     st.session_state.current_image_index = 0
     st.session_state.show_qrcode = False
 
+def go_to_gustavo_page():
+    st.session_state.page = 'gustavo'
+    st.session_state.current_image_index = 0
+    st.session_state.show_qrcode = False
+
 def go_to_home_page():
     st.session_state.page = 'home'
 
 # --- Função genérica para exibir o conteúdo do documento ---
 def digital_document_page(title, image_files):
-    try:
-        images = [Image.open(f).rotate(90, expand=True) for f in image_files]
-        qrcode_image = Image.open("qrcode.png")
-    except FileNotFoundError as e:
-        st.error(f"Erro: Arquivo de imagem não encontrado. Certifique-se de que os arquivos '{e.filename}' estão no diretório correto.")
-        st.stop()
+    
+    # Carrega imagens usando a função cacheada
+    images = [load_image(f, rotate_degrees=90) for f in image_files]
+    qrcode_image = load_image("qrcode.png")
+
+    # Verifica se alguma imagem falhou ao carregar
+    if any(img is None for img in images) or qrcode_image is None:
+        st.error("Uma ou mais imagens não puderam ser carregadas. Verifique os nomes e caminhos dos arquivos.")
+        st.button("Voltar", on_click=go_to_login_page)
+        st.stop() 
 
     def next_image():
         st.session_state.current_image_index = (st.session_state.current_image_index + 1) % len(images)
@@ -172,10 +209,15 @@ def digital_document_page(title, image_files):
 # --- Página Inicial ---
 if st.session_state.page == 'home':
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
-    try:
-        logo = Image.open("logo.png")
-        st.image(logo, use_container_width=True, output_format="PNG")
-    except FileNotFoundError:
+    logo = load_image("logo.png")
+    if logo:
+        # Adicionando a classe CSS para o efeito de hover
+        # Agora a função image_to_base64() é definida ANTES daqui
+        st.markdown(
+            f'<img src="data:image/png;base64,{image_to_base64(logo)}" class="logo-image">', 
+            unsafe_allow_html=True
+        )
+    else:
         st.error("Certifique-se de que o arquivo 'logo.png' está no mesmo diretório do seu script.")
         st.stop()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -188,11 +230,14 @@ if st.session_state.page == 'home':
 elif st.session_state.page == 'login':
     st.markdown('<div class="header-container">Quem é você?</div>', unsafe_allow_html=True)
 
-    col_jeam, col_hayane = st.columns([1, 1])
+    col_jeam, col_hayane, col_gustavo = st.columns(3) 
+    
     with col_jeam:
         st.button("Jeam", on_click=go_to_jeam_page, use_container_width=True)
     with col_hayane:
         st.button("Hayane", on_click=go_to_hayane_page, use_container_width=True)
+    with col_gustavo:
+        st.button("Gustavo", on_click=go_to_gustavo_page, use_container_width=True)
 
     st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
     st.button("Voltar", on_click=go_to_home_page)
@@ -204,3 +249,9 @@ elif st.session_state.page == 'jeam':
 # --- Conteúdo de Hayane ---
 elif st.session_state.page == 'hayane':
     digital_document_page("DOCUMENTO DIGITAL", ["3.png", "4.png"])
+
+# --- Conteúdo de Gustavo ---
+elif st.session_state.page == 'gustavo':
+    digital_document_page("DOCUMENTO DIGITAL", ["5.png", "6.png"])
+
+# --- A FUNÇÃO AUXILIAR FOI REMOVIDA DAQUI ---
