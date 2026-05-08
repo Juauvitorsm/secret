@@ -4,23 +4,18 @@ from PIL import Image
 from io import BytesIO
 import base64
 
-# 1. Configuração da Página (Deve ser o primeiro comando)
+# Configuração da página
 st.set_page_config(
-    page_title="Portal Digital",
+    page_title="Sistema de Gestão de Documentos",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 2. Funções de Suporte (Imagens e Dados) com Cache
+# --- Funções de Backend ---
 @st.cache_data
 def load_image(image_path, rotate_degrees=0):
-    """Carrega imagem e aplica rotação APENAS se especificado."""
     try:
         image = Image.open(image_path)
-        # Forçamos a não usar metadados de auto-rotação (EXIF)
-        if hasattr(image, '_getexif'): 
-            image = Image.open(image_path) # Reabre para limpar cache interno
-
         if rotate_degrees != 0:
             return image.rotate(rotate_degrees, expand=True)
         return image
@@ -32,8 +27,9 @@ def image_to_base64(image):
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
 
-def get_student_data():
-    return {
+def get_student_data(name):
+    # Simulação de banco de dados para Notas e Frequência
+    data = {
         "Notas": pd.DataFrame({
             "Disciplina": ["Cálculo I", "Física Geral", "Programação", "Algoritmos"],
             "Nota": [8.5, 7.2, 9.8, 8.0],
@@ -45,161 +41,199 @@ def get_student_data():
             "Faltas": [1, 0, 3, 2]
         })
     }
+    return data
 
-# 3. CSS Profissional (Correção Mobile + Visual Limpo)
+# --- Estilização CSS ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    .main { background-color: #f8f9fa; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Estilo da Imagem do Documento - Evitar distorções */
-    .stImage img {
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        max-width: 100% !important;
-        height: auto !important;
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
     }
 
-    /* FORÇAR COLUNAS LADO A LADO NO MOBILE (Fix definitivo) */
-    [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 10px !important;
-    }
-    [data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 auto !important;
-        min-width: 0px !important;
+    .main {
+        background-color: #f4f7f6;
     }
 
-    /* Estilo dos Botões - Fácil de clicar */
-    div.stButton > button {
-        width: 100% !important;
-        height: 52px !important;
-        border-radius: 10px !important;
-        background-color: #ffffff !important;
-        color: #1a237e !important;
-        border: 1px solid #e0e6ed !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        font-size: 0.75rem !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-        margin-bottom: 0px !important;
-    }
-    div.stButton > button:hover {
-        border-color: #1a237e !important;
-        background-color: #f0f2ff !important;
-    }
-
-    /* Títulos e Layout */
+    /* Títulos */
     .section-title {
         color: #1a237e;
         font-weight: 700;
-        font-size: 1.3rem;
+        font-size: 1.8rem;
         text-align: center;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+    }
+
+    /* Cards de Perfil na Seleção de Usuário */
+    .profile-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 25px;
+        text-align: center;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        margin-bottom: 10px;
+    }
+    .profile-card:hover {
+        transform: translateY(-5px);
+        border-color: #1a237e;
+        box-shadow: 0 10px 20px rgba(26, 35, 126, 0.1);
+    }
+    .avatar {
+        width: 70px;
+        height: 70px;
+        background-color: #e8eaf6;
+        color: #1a237e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0 auto 15px auto;
+    }
+
+    /* Container do Documento */
+    .document-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         margin-bottom: 20px;
     }
 
+    /* Botões */
+    div.stButton > button {
+        width: 100%;
+        border-radius: 10px;
+        height: 48px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        border: 1px solid #1a237e;
+    }
+    div.stButton > button:hover {
+        background-color: #1a237e !important;
+        color: white !important;
+    }
+
+    /* Ocultar elementos Streamlit */
     #MainMenu, header, footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# 4. Gestão de Navegação
-if 'page' not in st.session_state: st.session_state.page = 'home'
-if 'img_idx' not in st.session_state: st.session_state.img_idx = 0
-if 'view' not in st.session_state: st.session_state.view = None
+# --- Gestão de Navegação ---
+if 'page' not in st.session_state:
+    st.session_state.page = 'home'
+if 'img_idx' not in st.session_state:
+    st.session_state.img_idx = 0
+if 'view_mode' not in st.session_state:
+    st.session_state.view_mode = None
 
 def navigate(page):
     st.session_state.page = page
     st.session_state.img_idx = 0
-    st.session_state.view = None
+    st.session_state.view_mode = None
 
-# --- ROTEAMENTO DE PÁGINAS ---
+# --- Páginas ---
 
-# PÁGINA: HOME
+# 1. HOME
 if st.session_state.page == 'home':
-    st.markdown('<div style="height: 15vh;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height: 12vh;"></div>', unsafe_allow_html=True)
     logo = load_image("logo.png")
     if logo:
-        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{image_to_base64(logo)}" style="max-width:250px; border-radius:12px;"></div>', unsafe_allow_html=True)
-    st.markdown('<br><br>', unsafe_allow_html=True)
-    _, col, _ = st.columns([1, 0.8, 1])
-    with col:
-        st.button("ENTRAR NO PORTAL", on_click=navigate, args=('login',))
-
-# PÁGINA: LOGIN (SELEÇÃO)
-elif st.session_state.page == 'login':
-    st.markdown("<h2 class='section-title'>IDENTIFIQUE-SE</h2>", unsafe_allow_html=True)
+        b64 = image_to_base64(logo)
+        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{b64}" style="max-width:250px;"></div>', unsafe_allow_html=True)
     
-    # Lista simples de botões para mobile
+    st.markdown('<br><br>', unsafe_allow_html=True)
+    _, col, _ = st.columns([1, 0.6, 1])
+    with col:
+        st.button("ACESSAR PORTAL", on_click=navigate, args=('login',))
+
+# 2. SELEÇÃO DE USUÁRIO (LOGIN)
+elif st.session_state.page == 'login':
+    st.markdown('<h1 class="section-title">Quem está acessando?</h1>', unsafe_allow_html=True)
+    
     _, col_center, _ = st.columns([0.1, 1, 0.1])
     with col_center:
-        st.button("👤 JEAM", key="j", on_click=navigate, args=('jean',))
-        st.button("👤 THIAGO", key="t", on_click=navigate, args=('thiago',))
-        st.button("👤 HEMILLY", key="h", on_click=navigate, args=('hemilly',))
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.button("VOLTAR AO INÍCIO", on_click=navigate, args=('home',))
+        c1, c2, c3 = st.columns(3)
+        
+        with c1:
+            st.markdown('<div class="profile-card"><div class="avatar">J</div><div style="font-weight:700;">JEAM</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            if st.button("SELECIONAR", key="sel_j"): navigate('jean'); st.rerun()
 
-# PÁGINAS DE DOCUMENTOS
+        with c2:
+            st.markdown('<div class="profile-card"><div class="avatar">T</div><div style="font-weight:700;">THIAGO</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            if st.button("SELECIONAR", key="sel_t"): navigate('thiago'); st.rerun()
+
+        with c3:
+            st.markdown('<div class="profile-card"><div class="avatar">H</div><div style="font-weight:700;">HEMILLY</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            if st.button("SELECIONAR", key="sel_h"): navigate('hemilly'); st.rerun()
+
+    st.markdown('<br>', unsafe_allow_html=True)
+    _, col_back, _ = st.columns([1, 0.4, 1])
+    with col_back:
+        st.button("VOLTAR", on_click=navigate, args=('home',))
+
+# 3. PRONTUÁRIOS INDIVIDUAIS
 elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
-    users = {"jean": ["1.png", "2.png"], "thiago": ["3.png", "4.png"], "hemilly": ["5.png", "6.png"]}
-    names = {"jean": "JEAM", "thiago": "THIAGO", "hemilly": "HEMILLY"}
+    name_map = {"jean": "JEAM", "thiago": "THIAGO", "hemilly": "HEMILLY"}
+    file_map = {
+        "jean": ["1.png", "2.png"],
+        "thiago": ["3.png", "4.png"],
+        "hemilly": ["5.png", "6.png"]
+    }
     
-    current = st.session_state.page
-    st.markdown(f"<h3 class='section-title'>DOCUMENTOS: {names[current]}</h3>", unsafe_allow_html=True)
+    current_user = st.session_state.page
+    st.markdown(f'<h1 class="section-title">DOCUMENTOS: {name_map[current_user]}</h1>', unsafe_allow_html=True)
     
-    # --- EXIBIÇÃO DA IMAGEM ---
-    # Usamos rotate_degrees=0 e use_container_width=True 
-    # para garantir que ela fique deitada conforme o print original.
-    imgs = [load_image(f, rotate_degrees=0) for f in users[current]]
-    
-    if imgs[st.session_state.img_idx]:
-        st.image(imgs[st.session_state.img_idx], use_container_width=True)
-    else:
-        st.error("Erro ao carregar imagem.")
+    # Documento
+    images = [load_image(f, rotate_degrees=90) for f in file_map[current_user]]
+    st.markdown('<div class="document-card">', unsafe_allow_html=True)
+    if images[st.session_state.img_idx]:
+        st.image(images[st.session_state.img_idx], use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- GRID DE BOTÕES (Lado a Lado no Mobile) ---
-    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-    
-    # Linha 1: Navegação de Imagem
-    n1, n2 = st.columns(2)
-    with n1:
+    # Navegação entre imagens
+    nav1, nav2 = st.columns(2)
+    with nav1:
         if st.button("← ANTERIOR"):
-            st.session_state.img_idx = (st.session_state.img_idx - 1) % len(imgs); st.rerun()
-    with n2:
+            st.session_state.img_idx = (st.session_state.img_idx - 1) % len(images); st.rerun()
+    with nav2:
         if st.button("PRÓXIMO →"):
-            st.session_state.img_idx = (st.session_state.img_idx + 1) % len(imgs); st.rerun()
+            st.session_state.img_idx = (st.session_state.img_idx + 1) % len(images); st.rerun()
 
-    # Linha 2: Funções do Aluno
-    st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-    f1, f2 = st.columns(2)
-    with f1:
-        if st.button("📊 Frequência"): st.session_state.view = 'f'; st.rerun()
-    with f2:
-        if st.button("📝 Notas"): st.session_state.view = 'n'; st.rerun()
+    st.divider()
 
-    # Linha 3: Extras e Sair
-    st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-    e1, e2 = st.columns(2)
-    with e1:
-        if st.button("📱 QR CODE"): st.session_state.view = 'q'; st.rerun()
-    with e2:
-        st.button("🔙 SAIR", on_click=navigate, args=('login',))
+    # Ações e Dados
+    act1, act2, act3 = st.columns(3)
+    with act1:
+        if st.button("FREQUÊNCIA"): st.session_state.view_mode = 'freq'; st.rerun()
+    with act2:
+        if st.button("NOTAS"): st.session_state.view_mode = 'notas'; st.rerun()
+    with act3:
+        if st.button("QR CODE"): st.session_state.view_mode = 'qr'; st.rerun()
 
-    # Área de Exibição de Dados Fictícios
-    if st.session_state.view:
-        st.divider()
-        data = get_student_data()
-        if st.session_state.view == 'n':
-            st.markdown("#### Histórico de Notas"); st.table(data["Notas"])
-        elif st.session_state.view == 'f':
-            st.markdown("#### Relatório de Presença"); st.table(data["Frequência"])
-        elif st.session_state.view == 'q':
-            qr = load_image("qrcode.png")
-            if qr: 
-                _, qcol, _ = st.columns([1, 1, 1])
-                with qcol: st.image(qr, use_container_width=True)
+    # Área de Dados Fictícios
+    user_data = get_student_data(name_map[current_user])
+    
+    if st.session_state.view_mode == 'notas':
+        st.markdown("### Histórico de Notas")
+        st.table(user_data["Notas"])
+    
+    elif st.session_state.view_mode == 'freq':
+        st.markdown("### Relatório de Frequência")
+        st.table(user_data["Frequência"])
+    
+    elif st.session_state.view_mode == 'qr':
+        qr = load_image("qrcode.png")
+        if qr:
+            _, qcol, _ = st.columns([1, 0.4, 1])
+            with qcol: st.image(qr, use_container_width=True)
+
+    st.markdown('<br>', unsafe_allow_html=True)
+    st.button("SAIR DO PERFIL", on_click=navigate, args=('login',))
