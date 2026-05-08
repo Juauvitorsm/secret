@@ -6,12 +6,12 @@ import base64
 
 # 1. Configuração da página
 st.set_page_config(
-    page_title="Sistema de Identificação",
+    page_title="Identificação Digital",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- Funções de Suporte ---
+# --- Funções ---
 @st.cache_data
 def load_image(image_path, rotate_degrees=0):
     try:
@@ -27,137 +27,123 @@ def image_to_base64(image):
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
 
-# --- CSS: BLOCO INTEGRADO E CARD DE VALIDADE ---
+# --- CSS: DESIGN INTEGRADO E TELA CHEIA ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     
-    .block-container { 
-        padding-top: 0.5rem !important; 
-        padding-left: 0rem !important; 
-        padding-right: 0rem !important; 
-        max-width: 100% !important; 
-    }
+    .block-container { padding: 0 !important; max-width: 100% !important; }
 
-    /* CARD DE VALIDADE (Design inspirado no seu print) */
-    .validade-container {
-        background-color: #1a237e;
+    /* CARD DE VALIDADE: Cor Ajustada para combinar com o ID */
+    .validade-card {
+        background: linear-gradient(90deg, #0056b3 0%, #007bff 100%);
         color: white;
-        padding: 15px;
+        padding: 20px;
         text-align: left;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        border-bottom: 1px solid #ffffff33;
         width: 100vw;
+        border-bottom: 2px solid #00f2fe;
     }
-    .val-label { font-size: 0.7rem; opacity: 0.8; margin-bottom: 2px; }
-    .val-date { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
-    
+    .val-label { font-size: 0.75rem; font-weight: 400; opacity: 0.9; }
+    .val-date { font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; }
     .val-box {
-        background: white;
-        color: #1a237e;
-        padding: 5px 15px;
-        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #0056b3;
+        padding: 8px 20px;
+        border-radius: 8px;
         display: inline-block;
-        width: fit-content;
-        margin-top: 5px;
     }
 
-    /* Título e Linha */
-    .section-header { text-align: center; color: #1a237e; font-weight: 700; font-size: 1rem; margin: 10px 0; }
-    .blue-line { height: 6px; background-color: #1a237e; width: 100%; }
+    /* Ajuste das Tabs para parecerem um menu de fotos */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0px;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 40px;
+        white-space: pre-wrap;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
 
-    /* Layout de Botões */
+    /* Botões de Função */
     [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         gap: 2px !important;
-        margin-top: -1px !important;
         width: 100vw !important;
+        margin: 0 !important;
     }
-    [data-testid="column"] { flex: 1 !important; padding: 0px !important; }
-
     div.stButton > button {
         width: 100% !important;
         border-radius: 0px !important;
-        height: 50px !important;
+        height: 55px !important;
         font-weight: 700 !important;
-        font-size: 0.7rem !important;
-        background-color: #ffffff !important;
-        color: #1a237e !important;
-        border: 1px solid #e5e7eb !important;
+        font-size: 0.75rem !important;
+        border: 1px solid #e9ecef !important;
     }
 
-    .stImage img { width: 100vw !important; border-radius: 0px; display: block; }
+    .stImage img { width: 100vw !important; border-radius: 0px; }
     
     #MainMenu, header, footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Navegação e Estado ---
+# --- Navegação ---
 if 'page' not in st.session_state: st.session_state.page = 'home'
-if 'img_idx' not in st.session_state: st.session_state.img_idx = 0
 if 'view' not in st.session_state: st.session_state.view = None
 
 def navigate(p):
     st.session_state.page = p
-    st.session_state.img_idx = 0
     st.session_state.view = None
 
-# --- Páginas ---
+# --- Fluxo ---
 
 if st.session_state.page == 'home':
-    st.markdown('<div style="height: 15vh;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height: 20vh;"></div>', unsafe_allow_html=True)
     logo = load_image("logo.png")
     if logo:
-        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{image_to_base64(logo)}" style="max-width:200px;"></div>', unsafe_allow_html=True)
-    st.button("ACESSAR SISTEMA", on_click=navigate, args=('login',))
+        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{image_to_base64(logo)}" style="max-width:220px;"></div>', unsafe_allow_html=True)
+    st.button("ACESSAR IDENTIFICAÇÃO", on_click=navigate, args=('login',))
 
 elif st.session_state.page == 'login':
-    st.markdown('<div class="section-header">SELECIONE O ALUNO</div>', unsafe_allow_html=True)
+    st.markdown('<div style="padding:20px; text-align:center; font-weight:700;">SELECIONE O ALUNO</div>', unsafe_allow_html=True)
     for key, name, initial in [("jean", "JEAM", "J"), ("thiago", "THIAGO", "T"), ("hemilly", "HEMILLY", "H")]:
-        if st.button(f"ALUNO: {name}", key=f"btn_{key}"): navigate(key); st.rerun()
+        if st.button(f"👤 {name}", key=f"btn_{key}"): navigate(key); st.rerun()
 
 elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
     names = {"jean": "JEAM", "thiago": "THIAGO", "hemilly": "HEMILLY"}
-    # Certifique-se de que os nomes dos arquivos estão corretos
     files = {"jean": ["1.png", "2.png"], "thiago": ["3.png", "4.png"], "hemilly": ["5.png", "6.png"]}
     current = st.session_state.page
     
-    st.markdown(f'<div class="section-header">IDENTIFICAÇÃO: {names[current]}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="blue-line"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="padding:15px; text-align:center; font-weight:700; background:white;">IDENTIFICAÇÃO: {names[current]}</div>', unsafe_allow_html=True)
     
-    # Foto
+    # --- TROCA DE FOTOS POR ABAS (Simula Swipe no Celular) ---
+    tab_frente, tab_verso = st.tabs(["FRENTE DO DOCUMENTO", "VERSO DO DOCUMENTO"])
+    
     imgs = [load_image(f, rotate_degrees=90) for f in files[current]]
-    if imgs[st.session_state.img_idx]:
-        st.image(imgs[st.session_state.img_idx], use_container_width=True)
+    
+    with tab_frente:
+        if imgs[0]: st.image(imgs[0], use_container_width=True)
+        
+    with tab_verso:
+        if len(imgs) > 1: st.image(imgs[1], use_container_width=True)
+        else: st.warning("Verso não disponível.")
 
-    # --- NOVO CARD DE VALIDADE (Abaixo da foto) ---
+    # --- CARD DE VALIDADE (Design Combinado) ---
     st.markdown(f"""
-        <div class="validade-container">
+        <div class="validade-card">
             <div class="val-label">Data da Matrícula:</div>
             <div class="val-date">01/03/2019</div>
             <div class="val-box">
-                <span style="font-size:0.7rem; font-weight:700;">Validade:</span><br>
-                <span style="font-size:1.1rem; font-weight:800;">30/06/2026</span>
+                <span style="font-size:0.7rem; font-weight:700;">VALIDADE:</span><br>
+                <span style="font-size:1.2rem; font-weight:800;">30/06/2026</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # Navegação (Botão Próximo corrigido com rerun)
-    n1, n2 = st.columns(2)
-    with n1:
-        if st.button("← ANTERIOR"):
-            st.session_state.img_idx = (st.session_state.img_idx - 1) % len(imgs)
-            st.rerun()
-    with n2:
-        if st.button("PRÓXIMO →"):
-            st.session_state.img_idx = (st.session_state.img_idx + 1) % len(imgs)
-            st.rerun()
-
-    # Barra de Funções
+    # Botões de Função Acadêmica
     f1, f2, f3, f4 = st.columns(4)
     with f1:
         if st.button("FREQ."): st.session_state.view = 'f'; st.rerun()
@@ -168,10 +154,10 @@ elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
     with f4:
         if st.button("SAIR"): navigate('login'); st.rerun()
 
-    # Área de Dados
+    # Dados
     if st.session_state.view == 'q':
         qr = load_image("qrcode.png")
-        if qr: 
+        if qr:
             st.markdown("<br>", unsafe_allow_html=True)
             _, qc, _ = st.columns([1, 2, 1])
             with qc: st.image(qr, use_container_width=True)
