@@ -1,15 +1,9 @@
 [theme]
-# Cor primária (botões, seleções) - Um azul escuro da logo
-primaryColor = "#1a237e"
-
-# Cor do fundo da página - Um cinza-azulado claro
-backgroundColor = "#E0E8E9"
-
-# Cor do fundo secundário (barras laterais, inputs) - Branco
-secondaryBackgroundColor = "#FFFFFF"
-
-# Cor do texto principal - Um cinza escuro para boa legibilidade
-textColor = "#262730"
-
-# Opcional: Fonte. O "sans serif" é uma boa escolha padrão.
+primaryColor = "#3949ab"
+backgroundColor = "#f0f2f6"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#1e1e1e"
 font = "sans serif"
+
+[server]
+headless = true

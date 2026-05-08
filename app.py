@@ -1,257 +1,239 @@
 import streamlit as st
+import pandas as pd
 from PIL import Image
-from io import BytesIO  # <-- ADICIONADO AQUI
-import base64           # <-- ADICIONADO AQUI
+from io import BytesIO
+import base64
 
-# Configuração da página (deve ser a primeira cois do Streamlit)
-st.set_page_config(layout="wide")
+# Configuração da página
+st.set_page_config(
+    page_title="Sistema de Gestão de Documentos",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# --- Função de Cache para Imagens ---
+# --- Funções de Backend ---
 @st.cache_data
 def load_image(image_path, rotate_degrees=0):
-    """
-    Carrega uma imagem do disco, aplica rotação (se necessário) e a mantém em cache.
-    Retorna o objeto de imagem PIL ou None se o arquivo não for encontrado.
-    """
     try:
         image = Image.open(image_path)
         if rotate_degrees != 0:
             return image.rotate(rotate_degrees, expand=True)
         return image
-    except FileNotFoundError:
-        st.error(f"Erro: Arquivo de imagem não encontrado em: {image_path}")
+    except Exception:
         return None
 
-# --- Função auxiliar para converter imagem (MOVIDA PARA CIMA) ---
 def image_to_base64(image):
-    """Converte um objeto de imagem PIL para string base64."""
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
 
+def get_student_data(name):
+    # Simulação de banco de dados para Notas e Frequência
+    data = {
+        "Notas": pd.DataFrame({
+            "Disciplina": ["Cálculo I", "Física Geral", "Programação", "Algoritmos"],
+            "Nota": [8.5, 7.2, 9.8, 8.0],
+            "Status": ["Aprovado", "Aprovado", "Aprovado", "Aprovado"]
+        }),
+        "Frequência": pd.DataFrame({
+            "Mês": ["Fevereiro", "Março", "Abril", "Maio"],
+            "Presenças": ["95%", "100%", "88%", "92%"],
+            "Faltas": [1, 0, 3, 2]
+        })
+    }
+    return data
 
-# --- Estilos CSS Corporativos (Injetados apenas uma vez) ---
+# --- Estilização CSS ---
 st.markdown("""
 <style>
-/* ... (Todo o seu CSS continua o mesmo, omitido aqui para ser breve) ... */
-/* Corpo da página */
-body {
-    font-family: 'Montserrat', sans-serif;
-    background-color: #f4f6f9;
-}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Logo centralizado */
-.logo-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 3rem;
-    margin-bottom: 2rem;
-}
-.logo-image {
-    max-width: 60%;
-    height: auto;
-    border-radius: 20px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-    transition: transform 0.3s ease;
-}
-.logo-image:hover {
-    transform: scale(1.05);
-}
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
 
-/* Cabeçalhos */
-.header-container {
-    text-align: center;
-    color: #1a237e;
-    font-size: 2.4em;
-    font-weight: 800;
-    margin-bottom: 1.5rem;
-}
+    .main {
+        background-color: #f4f7f6;
+    }
 
-/* Divisores e barras estilizadas */
-.color-divider {
-    border-bottom: 2px solid #5c6bc0;
-    margin: 2rem 0;
-}
-.styled-bar {
-    margin: 2rem 0;
-    height: 8px;
-    border-radius: 12px;
-    background: linear-gradient(90deg, #1a237e, #3949ab, #5c6bc0);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
+    /* Títulos */
+    .section-title {
+        color: #1a237e;
+        font-weight: 700;
+        font-size: 1.8rem;
+        text-align: center;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+    }
 
-/* Botões modernos */
-.stButton button {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1.1em;
-    font-weight: 600;
-    color: #1a237e !important;
-    background-color: #e6eef5;
-    border: 2px solid #5c6bc0;
-    border-radius: 35px;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-    padding: 0.8rem 2.5rem;
-    transition: all 0.3s ease;
-}
-.stButton button:hover {
-    background-color: #5c6bc0;
-    color: #fff !important;
-    border-color: #5c6bc0;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    transform: translateY(-2px);
-}
+    /* Cards de Perfil na Seleção de Usuário */
+    .profile-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 25px;
+        text-align: center;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        margin-bottom: 10px;
+    }
+    .profile-card:hover {
+        transform: translateY(-5px);
+        border-color: #1a237e;
+        box-shadow: 0 10px 20px rgba(26, 35, 126, 0.1);
+    }
+    .avatar {
+        width: 70px;
+        height: 70px;
+        background-color: #e8eaf6;
+        color: #1a237e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0 auto 15px auto;
+    }
 
-/* Cartões de imagem */
-.image-container {
-    border-radius: 20px;
-    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
-    padding: 15px;
-    background: #ffffff;
-    margin-bottom: 25px;
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.image-container:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 35px rgba(0,0,0,0.25);
-}
+    /* Container do Documento */
+    .document-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
 
-/* Texto de links */
-.link-text {
-    font-weight: 400;
-    text-align: center;
-    color: #333333;
-    margin-top: 1rem;
-}
+    /* Botões */
+    div.stButton > button {
+        width: 100%;
+        border-radius: 10px;
+        height: 48px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        border: 1px solid #1a237e;
+    }
+    div.stButton > button:hover {
+        background-color: #1a237e !important;
+        color: white !important;
+    }
+
+    /* Ocultar elementos Streamlit */
+    #MainMenu, header, footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Inicialização do estado da sessão ---
+# --- Gestão de Navegação ---
 if 'page' not in st.session_state:
     st.session_state.page = 'home'
-    st.session_state.current_image_index = 0
-    st.session_state.show_qrcode = False
+if 'img_idx' not in st.session_state:
+    st.session_state.img_idx = 0
+if 'view_mode' not in st.session_state:
+    st.session_state.view_mode = None
 
-# --- Funções de Navegação ---
-def go_to_login_page():
-    st.session_state.page = 'login'
+def navigate(page):
+    st.session_state.page = page
+    st.session_state.img_idx = 0
+    st.session_state.view_mode = None
 
-def go_to_jeam_page():
-    st.session_state.page = 'jeam'
-    st.session_state.current_image_index = 0
-    st.session_state.show_qrcode = False
+# --- Páginas ---
 
-def go_to_hayane_page():
-    st.session_state.page = 'hayane'
-    st.session_state.current_image_index = 0
-    st.session_state.show_qrcode = False
-
-def go_to_gustavo_page():
-    st.session_state.page = 'gustavo'
-    st.session_state.current_image_index = 0
-    st.session_state.show_qrcode = False
-
-def go_to_home_page():
-    st.session_state.page = 'home'
-
-# --- Função genérica para exibir o conteúdo do documento ---
-def digital_document_page(title, image_files):
-    
-    # Carrega imagens usando a função cacheada
-    images = [load_image(f, rotate_degrees=90) for f in image_files]
-    qrcode_image = load_image("qrcode.png")
-
-    # Verifica se alguma imagem falhou ao carregar
-    if any(img is None for img in images) or qrcode_image is None:
-        st.error("Uma ou mais imagens não puderam ser carregadas. Verifique os nomes e caminhos dos arquivos.")
-        st.button("Voltar", on_click=go_to_login_page)
-        st.stop() 
-
-    def next_image():
-        st.session_state.current_image_index = (st.session_state.current_image_index + 1) % len(images)
-
-    def prev_image():
-        st.session_state.current_image_index = (st.session_state.current_image_index - 1 + len(images)) % len(images)
-
-    st.markdown('<div class="color-divider"></div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="header-container">{title}</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-    st.image(images[st.session_state.current_image_index], use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    col_prev, col_spacer, col_next = st.columns([1, 4, 1])
-    with col_prev:
-        st.button("Anterior", on_click=prev_image, use_container_width=True)
-    with col_next:
-        st.button("Próximo", on_click=next_image, use_container_width=True)
-
-    st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
-
-    col_freq, col_notas, col_qrcode = st.columns(3)
-    with col_freq:
-        st.button("Frequência", use_container_width=True)
-    with col_notas:
-        st.button("Notas", use_container_width=True)
-    with col_qrcode:
-        if st.button("QR Code", use_container_width=True):
-            st.session_state.show_qrcode = not st.session_state.show_qrcode
-
-    if st.session_state.show_qrcode:
-        col_qr_left, col_qr_center, col_qr_right = st.columns([1, 0.5, 1])
-        with col_qr_center:
-            st.image(qrcode_image, use_container_width=True, caption="QR Code", width=200)
-
-    st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
-    st.button("Voltar", on_click=go_to_login_page)
-
-# --- Página Inicial ---
+# 1. HOME
 if st.session_state.page == 'home':
-    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+    st.markdown('<div style="height: 12vh;"></div>', unsafe_allow_html=True)
     logo = load_image("logo.png")
     if logo:
-        # Adicionando a classe CSS para o efeito de hover
-        # Agora a função image_to_base64() é definida ANTES daqui
-        st.markdown(
-            f'<img src="data:image/png;base64,{image_to_base64(logo)}" class="logo-image">', 
-            unsafe_allow_html=True
-        )
-    else:
-        st.error("Certifique-se de que o arquivo 'logo.png' está no mesmo diretório do seu script.")
-        st.stop()
+        b64 = image_to_base64(logo)
+        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{b64}" style="max-width:250px;"></div>', unsafe_allow_html=True)
+    
+    st.markdown('<br><br>', unsafe_allow_html=True)
+    _, col, _ = st.columns([1, 0.6, 1])
+    with col:
+        st.button("ACESSAR PORTAL", on_click=navigate, args=('login',))
+
+# 2. SELEÇÃO DE USUÁRIO (LOGIN)
+elif st.session_state.page == 'login':
+    st.markdown('<h1 class="section-title">Quem está acessando?</h1>', unsafe_allow_html=True)
+    
+    _, col_center, _ = st.columns([0.1, 1, 0.1])
+    with col_center:
+        c1, c2, c3 = st.columns(3)
+        
+        with c1:
+            st.markdown('<div class="profile-card"><div class="avatar">J</div><div style="font-weight:700;">JEAM</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            if st.button("SELECIONAR", key="sel_j"): navigate('jean'); st.rerun()
+
+        with c2:
+            st.markdown('<div class="profile-card"><div class="avatar">T</div><div style="font-weight:700;">THIAGO</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            if st.button("SELECIONAR", key="sel_t"): navigate('thiago'); st.rerun()
+
+        with c3:
+            st.markdown('<div class="profile-card"><div class="avatar">H</div><div style="font-weight:700;">HEMILLY</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            if st.button("SELECIONAR", key="sel_h"): navigate('hemilly'); st.rerun()
+
+    st.markdown('<br>', unsafe_allow_html=True)
+    _, col_back, _ = st.columns([1, 0.4, 1])
+    with col_back:
+        st.button("VOLTAR", on_click=navigate, args=('home',))
+
+# 3. PRONTUÁRIOS INDIVIDUAIS
+elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
+    name_map = {"jean": "JEAM", "thiago": "THIAGO", "hemilly": "HEMILLY"}
+    file_map = {
+        "jean": ["1.png", "2.png"],
+        "thiago": ["3.png", "4.png"],
+        "hemilly": ["5.png", "6.png"]
+    }
+    
+    current_user = st.session_state.page
+    st.markdown(f'<h1 class="section-title">DOCUMENTOS: {name_map[current_user]}</h1>', unsafe_allow_html=True)
+    
+    # Documento
+    images = [load_image(f, rotate_degrees=90) for f in file_map[current_user]]
+    st.markdown('<div class="document-card">', unsafe_allow_html=True)
+    if images[st.session_state.img_idx]:
+        st.image(images[st.session_state.img_idx], use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 0.5, 1])
-    with col2:
-        st.button("Entrar", on_click=go_to_login_page)
+    # Navegação entre imagens
+    nav1, nav2 = st.columns(2)
+    with nav1:
+        if st.button("← ANTERIOR"):
+            st.session_state.img_idx = (st.session_state.img_idx - 1) % len(images); st.rerun()
+    with nav2:
+        if st.button("PRÓXIMO →"):
+            st.session_state.img_idx = (st.session_state.img_idx + 1) % len(images); st.rerun()
 
-# --- Página de Login ---
-elif st.session_state.page == 'login':
-    st.markdown('<div class="header-container">Quem é você?</div>', unsafe_allow_html=True)
+    st.divider()
 
-    col_jeam, col_hayane, col_gustavo = st.columns(3) 
+    # Ações e Dados
+    act1, act2, act3 = st.columns(3)
+    with act1:
+        if st.button("FREQUÊNCIA"): st.session_state.view_mode = 'freq'; st.rerun()
+    with act2:
+        if st.button("NOTAS"): st.session_state.view_mode = 'notas'; st.rerun()
+    with act3:
+        if st.button("QR CODE"): st.session_state.view_mode = 'qr'; st.rerun()
+
+    # Área de Dados Fictícios
+    user_data = get_student_data(name_map[current_user])
     
-    with col_jeam:
-        st.button("Jeam", on_click=go_to_jeam_page, use_container_width=True)
-    with col_hayane:
-        st.button("Hayane", on_click=go_to_hayane_page, use_container_width=True)
-    with col_gustavo:
-        st.button("Gustavo", on_click=go_to_gustavo_page, use_container_width=True)
+    if st.session_state.view_mode == 'notas':
+        st.markdown("### Histórico de Notas")
+        st.table(user_data["Notas"])
+    
+    elif st.session_state.view_mode == 'freq':
+        st.markdown("### Relatório de Frequência")
+        st.table(user_data["Frequência"])
+    
+    elif st.session_state.view_mode == 'qr':
+        qr = load_image("qrcode.png")
+        if qr:
+            _, qcol, _ = st.columns([1, 0.4, 1])
+            with qcol: st.image(qr, use_container_width=True)
 
-    st.markdown('<div class="styled-bar"></div>', unsafe_allow_html=True)
-    st.button("Voltar", on_click=go_to_home_page)
-
-# --- Conteúdo de Jeam ---
-elif st.session_state.page == 'jeam':
-    digital_document_page("DOCUMENTO DIGITAL", ["1.png", "2.png"])
-
-# --- Conteúdo de Hayane ---
-elif st.session_state.page == 'hayane':
-    digital_document_page("DOCUMENTO DIGITAL", ["3.png", "4.png"])
-
-# --- Conteúdo de Gustavo ---
-elif st.session_state.page == 'gustavo':
-    digital_document_page("DOCUMENTO DIGITAL", ["5.png", "6.png"])
-
-# --- A FUNÇÃO AUXILIAR FOI REMOVIDA DAQUI ---
+    st.markdown('<br>', unsafe_allow_html=True)
+    st.button("SAIR DO PERFIL", on_click=navigate, args=('login',))
