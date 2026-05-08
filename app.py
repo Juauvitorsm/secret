@@ -4,18 +4,23 @@ from PIL import Image
 from io import BytesIO
 import base64
 
-# 1. Configuração da Página
+# 1. Configuração da Página (Deve ser o primeiro comando)
 st.set_page_config(
     page_title="Portal Digital",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 2. Funções de Suporte (Imagens e Dados)
+# 2. Funções de Suporte (Imagens e Dados) com Cache
 @st.cache_data
 def load_image(image_path, rotate_degrees=0):
+    """Carrega imagem e aplica rotação APENAS se especificado."""
     try:
         image = Image.open(image_path)
+        # Forçamos a não usar metadados de auto-rotação (EXIF)
+        if hasattr(image, '_getexif'): 
+            image = Image.open(image_path) # Reabre para limpar cache interno
+
         if rotate_degrees != 0:
             return image.rotate(rotate_degrees, expand=True)
         return image
@@ -41,7 +46,7 @@ def get_student_data():
         })
     }
 
-# 3. CSS Customizado (Correção Mobile + Visual Profissional)
+# 3. CSS Profissional (Correção Mobile + Visual Limpo)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -49,7 +54,15 @@ st.markdown("""
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .main { background-color: #f8f9fa; }
 
-    /* FORÇAR COLUNAS LADO A LADO NO MOBILE */
+    /* Estilo da Imagem do Documento - Evitar distorções */
+    .stImage img {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    /* FORÇAR COLUNAS LADO A LADO NO MOBILE (Fix definitivo) */
     [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -62,41 +75,32 @@ st.markdown("""
         min-width: 0px !important;
     }
 
-    /* Estilo dos Botões */
+    /* Estilo dos Botões - Fácil de clicar */
     div.stButton > button {
         width: 100% !important;
         height: 52px !important;
         border-radius: 10px !important;
         background-color: #ffffff !important;
         color: #1a237e !important;
-        border: 1px solid #d1d9e6 !important;
+        border: 1px solid #e0e6ed !important;
         font-weight: 600 !important;
         text-transform: uppercase !important;
         font-size: 0.75rem !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+        margin-bottom: 0px !important;
     }
     div.stButton > button:hover {
         border-color: #1a237e !important;
         background-color: #f0f2ff !important;
     }
 
-    /* Estilo dos Cards de Perfil */
-    .profile-card {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-        border: 1px solid #eee;
-        margin-bottom: 10px;
-    }
-    .avatar {
-        width: 60px; height: 60px;
-        background: #e8eaf6;
+    /* Títulos e Layout */
+    .section-title {
         color: #1a237e;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 10px auto;
-        font-weight: 700; font-size: 1.5rem;
+        font-weight: 700;
+        font-size: 1.3rem;
+        text-align: center;
+        margin-bottom: 20px;
     }
 
     #MainMenu, header, footer {visibility: hidden;}
@@ -128,21 +132,14 @@ if st.session_state.page == 'home':
 
 # PÁGINA: LOGIN (SELEÇÃO)
 elif st.session_state.page == 'login':
-    st.markdown("<h2 style='text-align:center; color:#1a237e;'>IDENTIFIQUE-SE</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='section-title'>IDENTIFIQUE-SE</h2>", unsafe_allow_html=True)
     
-    # Grid de Usuários
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown('<div class="profile-card"><div class="avatar">J</div>JEAM</div>', unsafe_allow_html=True)
-        st.button("ACESSAR", key="j", on_click=navigate, args=('jean',))
-    with c2:
-        st.markdown('<div class="profile-card"><div class="avatar">T</div>THIAGO</div>', unsafe_allow_html=True)
-        st.button("ACESSAR", key="t", on_click=navigate, args=('thiago',))
-    
-    _, c3, _ = st.columns([0.5, 1, 0.5])
-    with c3:
-        st.markdown('<div class="profile-card"><div class="avatar">H</div>HEMILLY</div>', unsafe_allow_html=True)
-        st.button("ACESSAR", key="h", on_click=navigate, args=('hemilly',))
+    # Lista simples de botões para mobile
+    _, col_center, _ = st.columns([0.1, 1, 0.1])
+    with col_center:
+        st.button("👤 JEAM", key="j", on_click=navigate, args=('jean',))
+        st.button("👤 THIAGO", key="t", on_click=navigate, args=('thiago',))
+        st.button("👤 HEMILLY", key="h", on_click=navigate, args=('hemilly',))
     
     st.markdown("<br>", unsafe_allow_html=True)
     st.button("VOLTAR AO INÍCIO", on_click=navigate, args=('home',))
@@ -153,17 +150,22 @@ elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
     names = {"jean": "JEAM", "thiago": "THIAGO", "hemilly": "HEMILLY"}
     
     current = st.session_state.page
-    st.markdown(f"<h3 style='text-align:center; color:#1a237e;'>DOCUMENTOS: {names[current]}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 class='section-title'>DOCUMENTOS: {names[current]}</h3>", unsafe_allow_html=True)
     
-    # Imagem (Mantendo como você pediu: em pé/conforme arquivo)
-    imgs = [load_image(f) for f in users[current]]
+    # --- EXIBIÇÃO DA IMAGEM ---
+    # Usamos rotate_degrees=0 e use_container_width=True 
+    # para garantir que ela fique deitada conforme o print original.
+    imgs = [load_image(f, rotate_degrees=0) for f in users[current]]
+    
     if imgs[st.session_state.img_idx]:
         st.image(imgs[st.session_state.img_idx], use_container_width=True)
+    else:
+        st.error("Erro ao carregar imagem.")
 
-    # GRID DE BOTÕES (Obrigatório 2 por linha no Mobile)
-    st.markdown("<br>", unsafe_allow_html=True)
+    # --- GRID DE BOTÕES (Lado a Lado no Mobile) ---
+    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
     
-    # Linha 1: Navegação
+    # Linha 1: Navegação de Imagem
     n1, n2 = st.columns(2)
     with n1:
         if st.button("← ANTERIOR"):
@@ -172,29 +174,32 @@ elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
         if st.button("PRÓXIMO →"):
             st.session_state.img_idx = (st.session_state.img_idx + 1) % len(imgs); st.rerun()
 
-    # Linha 2: Funções
+    # Linha 2: Funções do Aluno
+    st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
     f1, f2 = st.columns(2)
     with f1:
-        if st.button("FREQUÊNCIA"): st.session_state.view = 'f'; st.rerun()
+        if st.button("📊 Frequência"): st.session_state.view = 'f'; st.rerun()
     with f2:
-        if st.button("NOTAS"): st.session_state.view = 'n'; st.rerun()
+        if st.button("📝 Notas"): st.session_state.view = 'n'; st.rerun()
 
-    # Linha 3: Extras
+    # Linha 3: Extras e Sair
+    st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
     e1, e2 = st.columns(2)
     with e1:
-        if st.button("QR CODE"): st.session_state.view = 'q'; st.rerun()
+        if st.button("📱 QR CODE"): st.session_state.view = 'q'; st.rerun()
     with e2:
-        st.button("SAIR", on_click=navigate, args=('login',))
+        st.button("🔙 SAIR", on_click=navigate, args=('login',))
 
-    # Exibição de Dados Fictícios
-    data = get_student_data()
-    if st.session_state.view == 'n':
-        st.divider(); st.markdown("#### Histórico de Notas"); st.table(data["Notas"])
-    elif st.session_state.view == 'f':
-        st.divider(); st.markdown("#### Relatório de Presença"); st.table(data["Frequência"])
-    elif st.session_state.view == 'q':
-        qr = load_image("qrcode.png")
-        if qr: 
-            st.divider()
-            _, qcol, _ = st.columns([1, 1, 1])
-            with qcol: st.image(qr, width=150)
+    # Área de Exibição de Dados Fictícios
+    if st.session_state.view:
+        st.divider()
+        data = get_student_data()
+        if st.session_state.view == 'n':
+            st.markdown("#### Histórico de Notas"); st.table(data["Notas"])
+        elif st.session_state.view == 'f':
+            st.markdown("#### Relatório de Presença"); st.table(data["Frequência"])
+        elif st.session_state.view == 'q':
+            qr = load_image("qrcode.png")
+            if qr: 
+                _, qcol, _ = st.columns([1, 1, 1])
+                with qcol: st.image(qr, use_container_width=True)
