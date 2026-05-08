@@ -28,7 +28,6 @@ def image_to_base64(image):
     return base64.b64encode(buffered.getvalue()).decode()
 
 def get_student_data(name):
-    # Simulação de banco de dados para Notas e Frequência
     data = {
         "Notas": pd.DataFrame({
             "Disciplina": ["Cálculo I", "Física Geral", "Programação", "Algoritmos"],
@@ -43,85 +42,95 @@ def get_student_data(name):
     }
     return data
 
-# --- Estilização CSS ---
+# --- Estilização CSS Profissional ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
     }
 
     .main {
-        background-color: #f4f7f6;
+        background-color: #f8f9fb;
     }
 
     /* Títulos */
     .section-title {
         color: #1a237e;
         font-weight: 700;
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         text-transform: uppercase;
+        letter-spacing: -0.5px;
     }
 
-    /* Cards de Perfil na Seleção de Usuário */
-    .profile-card {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 25px;
-        text-align: center;
-        border: 1px solid #e0e0e0;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-        margin-bottom: 10px;
+    /* FORÇAR BOTÕES LADO A LADO NO MOBILE */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
     }
-    .profile-card:hover {
-        transform: translateY(-5px);
-        border-color: #1a237e;
-        box-shadow: 0 10px 20px rgba(26, 35, 126, 0.1);
-    }
-    .avatar {
-        width: 70px;
-        height: 70px;
-        background-color: #e8eaf6;
-        color: #1a237e;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin: 0 auto 15px auto;
+    [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        min-width: 0px !important;
     }
 
     /* Container do Documento */
     .document-card {
         background: #ffffff;
-        border-radius: 12px;
-        padding: 15px;
-        border: 1px solid #e0e0e0;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
+        border-radius: 16px;
+        padding: 10px;
+        border: 1px solid #eef0f2;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
     }
 
-    /* Botões */
+    /* Estilo dos Botões Profissionais */
     div.stButton > button {
-        width: 100%;
-        border-radius: 10px;
-        height: 48px;
-        font-weight: 600;
-        transition: all 0.2s;
-        text-transform: uppercase;
-        border: 1px solid #1a237e;
+        width: 100% !important;
+        border-radius: 12px !important;
+        height: 54px !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.2s ease !important;
+        text-transform: uppercase !important;
+        background-color: white !important;
+        color: #1a237e !important;
+        border: 1px solid #d1d9e6 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02) !important;
     }
+    
     div.stButton > button:hover {
         background-color: #1a237e !important;
         color: white !important;
+        border-color: #1a237e !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(26, 35, 126, 0.2) !important;
     }
 
-    /* Ocultar elementos Streamlit */
+    /* Cards de Perfil */
+    .profile-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #eef0f2;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+    }
+    .avatar {
+        width: 60px; height: 60px;
+        background-color: #e8eaf6;
+        color: #1a237e;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; font-weight: 700; margin: 0 auto 10px auto;
+    }
+
     #MainMenu, header, footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
@@ -147,7 +156,7 @@ if st.session_state.page == 'home':
     logo = load_image("logo.png")
     if logo:
         b64 = image_to_base64(logo)
-        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{b64}" style="max-width:250px;"></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{b64}" style="max-width:250px; border-radius: 20px;"></div>', unsafe_allow_html=True)
     
     st.markdown('<br><br>', unsafe_allow_html=True)
     _, col, _ = st.columns([1, 0.6, 1])
@@ -163,15 +172,15 @@ elif st.session_state.page == 'login':
         c1, c2, c3 = st.columns(3)
         
         with c1:
-            st.markdown('<div class="profile-card"><div class="avatar">J</div><div style="font-weight:700;">JEAM</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            st.markdown('<div class="profile-card"><div class="avatar">J</div><div style="font-weight:700;">JEAM</div></div>', unsafe_allow_html=True)
             if st.button("SELECIONAR", key="sel_j"): navigate('jean'); st.rerun()
 
         with c2:
-            st.markdown('<div class="profile-card"><div class="avatar">T</div><div style="font-weight:700;">THIAGO</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            st.markdown('<div class="profile-card"><div class="avatar">T</div><div style="font-weight:700;">THIAGO</div></div>', unsafe_allow_html=True)
             if st.button("SELECIONAR", key="sel_t"): navigate('thiago'); st.rerun()
 
         with c3:
-            st.markdown('<div class="profile-card"><div class="avatar">H</div><div style="font-weight:700;">HEMILLY</div><div style="font-size:0.8rem; color:#666;">Estudante</div></div>', unsafe_allow_html=True)
+            st.markdown('<div class="profile-card"><div class="avatar">H</div><div style="font-weight:700;">HEMILLY</div></div>', unsafe_allow_html=True)
             if st.button("SELECIONAR", key="sel_h"): navigate('hemilly'); st.rerun()
 
     st.markdown('<br>', unsafe_allow_html=True)
@@ -189,16 +198,16 @@ elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
     }
     
     current_user = st.session_state.page
-    st.markdown(f'<h1 class="section-title">DOCUMENTOS: {name_map[current_user]}</h1>', unsafe_allow_html=True)
+    st.markdown(f'<h1 class="section-title">{name_map[current_user]}</h1>', unsafe_allow_html=True)
     
-    # Documento
+    # Documento (Mantendo a sua rotação de 90 graus original)
     images = [load_image(f, rotate_degrees=90) for f in file_map[current_user]]
     st.markdown('<div class="document-card">', unsafe_allow_html=True)
     if images[st.session_state.img_idx]:
         st.image(images[st.session_state.img_idx], use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Navegação entre imagens
+    # Navegação entre imagens (Sempre lado a lado)
     nav1, nav2 = st.columns(2)
     with nav1:
         if st.button("← ANTERIOR"):
@@ -207,33 +216,36 @@ elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
         if st.button("PRÓXIMO →"):
             st.session_state.img_idx = (st.session_state.img_idx + 1) % len(images); st.rerun()
 
-    st.divider()
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
-    # Ações e Dados
-    act1, act2, act3 = st.columns(3)
+    # Ações Principais (Grade organizada)
+    act1, act2 = st.columns(2)
     with act1:
-        if st.button("FREQUÊNCIA"): st.session_state.view_mode = 'freq'; st.rerun()
+        if st.button("📊 FREQUÊNCIA"): st.session_state.view_mode = 'freq'; st.rerun()
     with act2:
-        if st.button("NOTAS"): st.session_state.view_mode = 'notas'; st.rerun()
+        if st.button("📝 NOTAS"): st.session_state.view_mode = 'notas'; st.rerun()
+
+    act3, act4 = st.columns(2)
     with act3:
-        if st.button("QR CODE"): st.session_state.view_mode = 'qr'; st.rerun()
+        if st.button("📱 QR CODE"): st.session_state.view_mode = 'qr'; st.rerun()
+    with act4:
+        st.button("🔙 SAIR", on_click=navigate, args=('login',))
 
-    # Área de Dados Fictícios
-    user_data = get_student_data(name_map[current_user])
-    
-    if st.session_state.view_mode == 'notas':
-        st.markdown("### Histórico de Notas")
-        st.table(user_data["Notas"])
-    
-    elif st.session_state.view_mode == 'freq':
-        st.markdown("### Relatório de Frequência")
-        st.table(user_data["Frequência"])
-    
-    elif st.session_state.view_mode == 'qr':
-        qr = load_image("qrcode.png")
-        if qr:
-            _, qcol, _ = st.columns([1, 0.4, 1])
-            with qcol: st.image(qr, use_container_width=True)
-
-    st.markdown('<br>', unsafe_allow_html=True)
-    st.button("SAIR DO PERFIL", on_click=navigate, args=('login',))
+    # Área de Dados Dinâmicos
+    if st.session_state.view_mode:
+        st.divider()
+        user_data = get_student_data(name_map[current_user])
+        
+        if st.session_state.view_mode == 'notas':
+            st.markdown("### Histórico de Notas")
+            st.table(user_data["Notas"])
+        
+        elif st.session_state.view_mode == 'freq':
+            st.markdown("### Relatório de Frequência")
+            st.table(user_data["Frequência"])
+        
+        elif st.session_state.view_mode == 'qr':
+            qr = load_image("qrcode.png")
+            if qr:
+                _, qcol, _ = st.columns([1, 0.6, 1])
+                with qcol: st.image(qr, use_container_width=True)
