@@ -4,20 +4,17 @@ from PIL import Image
 from io import BytesIO
 import base64
 
-# Configuração da página (deve ser o primeiro comando)
+# 1. Configuração da Página
 st.set_page_config(
-    page_title="Sistema de Documentos Digitais",
+    page_title="Portal Digital",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- Funções de Backend ---
+# 2. Funções de Suporte (Imagens e Dados)
 @st.cache_data
 def load_image(image_path, rotate_degrees=0):
-    """Carrega imagem e aplica rotação se necessário."""
     try:
-        # Nota: Para manter a imagem EXATAMENTE como no print, 
-        # o arquivo de origem já deve estar deitado, então rotate_degrees deve ser 0.
         image = Image.open(image_path)
         if rotate_degrees != 0:
             return image.rotate(rotate_degrees, expand=True)
@@ -26,181 +23,178 @@ def load_image(image_path, rotate_degrees=0):
         return None
 
 def image_to_base64(image):
-    """Converte objeto PIL para string base64 para uso em HTML."""
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
 
-# --- CSS Profissional e Alinhado ---
+def get_student_data():
+    return {
+        "Notas": pd.DataFrame({
+            "Disciplina": ["Cálculo I", "Física Geral", "Programação", "Algoritmos"],
+            "Nota": [8.5, 7.2, 9.8, 8.0],
+            "Status": ["Aprovado", "Aprovado", "Aprovado", "Aprovado"]
+        }),
+        "Frequência": pd.DataFrame({
+            "Mês": ["Fevereiro", "Março", "Abril", "Maio"],
+            "Presenças": ["95%", "100%", "88%", "92%"],
+            "Faltas": [1, 0, 3, 2]
+        })
+    }
+
+# 3. CSS Customizado (Correção Mobile + Visual Profissional)
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    .main { background-color: #f8f9fa; }
 
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+    /* FORÇAR COLUNAS LADO A LADO NO MOBILE */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
     }
-
-    .main {
-        background-color: #f4f7f6;
-    }
-
-    /* Títulos */
-    .section-title {
-        color: #1a237e;
-        font-weight: 700;
-        font-size: 1.5rem;
-        text-align: center;
-        margin-bottom: 20px;
-        text-transform: uppercase;
-    }
-
-    /* Documento (Alinhamento e Sombra) */
-    .stImage {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 25px;
-    }
-    .stImage img {
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-        max-width: 100% !important;
-    }
-
-    /* Container Global de Botões (Otimizado Mobile) */
     [data-testid="column"] {
         width: 100% !important;
-        flex: 1 1 calc(50% - 10px) !important;
-        min-width: calc(50% - 10px) !important;
+        flex: 1 1 auto !important;
+        min-width: 0px !important;
     }
 
-    /* Estilização Geral dos Botões */
+    /* Estilo dos Botões */
     div.stButton > button {
         width: 100% !important;
+        height: 52px !important;
         border-radius: 10px !important;
-        height: 52px !important; /* Altura ideal para toque */
         background-color: #ffffff !important;
         color: #1a237e !important;
         border: 1px solid #d1d9e6 !important;
         font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        transition: all 0.2s ease;
-        text-transform: uppercase;
-        margin-bottom: 0px;
+        text-transform: uppercase !important;
+        font-size: 0.75rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
     }
-
-    /* Efeito de Hover/Clique */
-    div.stButton > button:hover, div.stButton > button:focus {
+    div.stButton > button:hover {
         border-color: #1a237e !important;
         background-color: #f0f2ff !important;
-        color: #1a237e !important;
     }
 
-    /* Espaçador Profissional */
-    .div-bar {
-        height: 1px;
-        background-color: #e0e0e0;
-        margin: 25px 0;
+    /* Estilo dos Cards de Perfil */
+    .profile-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #eee;
+        margin-bottom: 10px;
+    }
+    .avatar {
+        width: 60px; height: 60px;
+        background: #e8eaf6;
+        color: #1a237e;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 10px auto;
+        font-weight: 700; font-size: 1.5rem;
     }
 
-    /* Ocultar elementos Streamlit */
     #MainMenu, header, footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Gestão de Navegação e Estado ---
-if 'page' not in st.session_state:
-    st.session_state.page = 'home'
-if 'img_idx' not in st.session_state:
-    st.session_state.img_idx = 0
+# 4. Gestão de Navegação
+if 'page' not in st.session_state: st.session_state.page = 'home'
+if 'img_idx' not in st.session_state: st.session_state.img_idx = 0
+if 'view' not in st.session_state: st.session_state.view = None
 
 def navigate(page):
     st.session_state.page = page
     st.session_state.img_idx = 0
+    st.session_state.view = None
 
-# --- Lógica das Páginas ---
+# --- ROTEAMENTO DE PÁGINAS ---
 
-# 1. HOME (Entrada)
+# PÁGINA: HOME
 if st.session_state.page == 'home':
     st.markdown('<div style="height: 15vh;"></div>', unsafe_allow_html=True)
     logo = load_image("logo.png")
     if logo:
-        b64 = image_to_base64(logo)
-        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{b64}" style="max-width:280px; border-radius:15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
-    
+        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{image_to_base64(logo)}" style="max-width:250px; border-radius:12px;"></div>', unsafe_allow_html=True)
     st.markdown('<br><br>', unsafe_allow_html=True)
-    _, col, _ = st.columns([1, 0.7, 1])
+    _, col, _ = st.columns([1, 0.8, 1])
     with col:
-        st.button("ACESSAR SISTEMA", on_click=navigate, args=('login',))
+        st.button("ENTRAR NO PORTAL", on_click=navigate, args=('login',))
 
-# 2. LOGIN (Seleção de Usuário)
+# PÁGINA: LOGIN (SELEÇÃO)
 elif st.session_state.page == 'login':
-    st.markdown('<h1 class="section-title">Quem está acessando?</h1>', unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#1a237e;'>IDENTIFIQUE-SE</h2>", unsafe_allow_html=True)
     
-    _, col_center, _ = st.columns([0.1, 1, 0.1])
-    with col_center:
-        # Grid de usuários 2x1 no mobile
-        c1, c2 = st.columns(2)
-        with c1:
-            st.button("👤 JEAM", key="sel_j", on_click=navigate, args=('jean',))
-        with c2:
-            st.button("👤 THIAGO", key="sel_t", on_click=navigate, args=('thiago',))
-        
-        # Centralizar o terceiro botão
-        _, c3, _ = st.columns([0.5, 1, 0.5])
-        with c3:
-            st.button("👤 HEMILLY", key="sel_h", on_click=navigate, args=('hemilly',))
+    # Grid de Usuários
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown('<div class="profile-card"><div class="avatar">J</div>JEAM</div>', unsafe_allow_html=True)
+        st.button("ACESSAR", key="j", on_click=navigate, args=('jean',))
+    with c2:
+        st.markdown('<div class="profile-card"><div class="avatar">T</div>THIAGO</div>', unsafe_allow_html=True)
+        st.button("ACESSAR", key="t", on_click=navigate, args=('thiago',))
+    
+    _, c3, _ = st.columns([0.5, 1, 0.5])
+    with c3:
+        st.markdown('<div class="profile-card"><div class="avatar">H</div>HEMILLY</div>', unsafe_allow_html=True)
+        st.button("ACESSAR", key="h", on_click=navigate, args=('hemilly',))
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.button("VOLTAR AO INÍCIO", on_click=navigate, args=('home',))
 
-    st.markdown('<div class="div-bar"></div>', unsafe_allow_html=True)
-    _, col_back, _ = st.columns([1, 0.5, 1])
-    with col_back:
-        st.button("VOLTAR", on_click=navigate, args=('home',))
-
-# 3. PRONTUÁRIOS INDIVIDUAIS
+# PÁGINAS DE DOCUMENTOS
 elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
-    name_map = {"jean": "JEAM", "thiago": "THIAGO", "hemilly": "HEMILLY"}
-    file_map = {
-        "jean": ["1.png", "2.png"],
-        "thiago": ["3.png", "4.png"],
-        "hemilly": ["5.png", "6.png"]
-    }
-    current_user = st.session_state.page
+    users = {"jean": ["1.png", "2.png"], "thiago": ["3.png", "4.png"], "hemilly": ["5.png", "6.png"]}
+    names = {"jean": "JEAM", "thiago": "THIAGO", "hemilly": "HEMILLY"}
     
-    # Título do Aluno
-    st.markdown(f'<h1 class="section-title">DOCUMENTOS: {name_map[current_user]}</h1>', unsafe_allow_html=True)
+    current = st.session_state.page
+    st.markdown(f"<h3 style='text-align:center; color:#1a237e;'>DOCUMENTOS: {names[current]}</h3>", unsafe_allow_html=True)
     
-    # EXIBIÇÃO DO DOCUMENTO (MANTIDO EXATAMENTE COMO NO PRINT)
-    # Assumindo que a imagem original já está na orientação correta.
-    # Se ela estiver deitada e você quiser que ela apareça deitada, rotate_degrees=0.
-    images = [load_image(f, rotate_degrees=0) for f in file_map[current_user]]
-    
-    if images[st.session_state.img_idx]:
-        st.image(images[st.session_state.img_idx], use_container_width=True)
-    else:
-        st.error(f"Erro ao carregar imagem: {file_map[current_user][st.session_state.img_idx]}")
+    # Imagem (Mantendo como você pediu: em pé/conforme arquivo)
+    imgs = [load_image(f) for f in users[current]]
+    if imgs[st.session_state.img_idx]:
+        st.image(imgs[st.session_state.img_idx], use_container_width=True)
 
-    # --- ORGANIZAÇÃO PROFISSIONAL DOS BOTÕES ---
-
-    # 1. Navegação de Imagem (Lado a Lado)
-    st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
-    nav1, nav2 = st.columns(2)
-    with nav1:
+    # GRID DE BOTÕES (Obrigatório 2 por linha no Mobile)
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Linha 1: Navegação
+    n1, n2 = st.columns(2)
+    with n1:
         if st.button("← ANTERIOR"):
-            st.session_state.img_idx = (st.session_state.img_idx - 1) % len(images); st.rerun()
-    with nav2:
+            st.session_state.img_idx = (st.session_state.img_idx - 1) % len(imgs); st.rerun()
+    with n2:
         if st.button("PRÓXIMO →"):
-            st.session_state.img_idx = (st.session_state.img_idx + 1) % len(images); st.rerun()
+            st.session_state.img_idx = (st.session_state.img_idx + 1) % len(imgs); st.rerun()
 
-    # 2. Funções (Grid Profissional)
-    st.markdown('<div style="margin-top:10px;"></div>', unsafe_allow_html=True)
-    func1, func2 = st.columns(2)
-    with func1:
-        st.button("📊 Frequência")
-    with func2:
-        st.button("📝 Notas")
+    # Linha 2: Funções
+    f1, f2 = st.columns(2)
+    with f1:
+        if st.button("FREQUÊNCIA"): st.session_state.view = 'f'; st.rerun()
+    with f2:
+        if st.button("NOTAS"): st.session_state.view = 'n'; st.rerun()
 
-    st.markdown('<div style="margin-top:10px;"></div>', unsafe_allow_html=True)
-    func3, func4 = st.columns(2)
-    with func3:
-        st.button("📱 QR Code")
-    with func4:
-        st.button("🔙 Sair", on_click=navigate, args=('login',))
+    # Linha 3: Extras
+    e1, e2 = st.columns(2)
+    with e1:
+        if st.button("QR CODE"): st.session_state.view = 'q'; st.rerun()
+    with e2:
+        st.button("SAIR", on_click=navigate, args=('login',))
+
+    # Exibição de Dados Fictícios
+    data = get_student_data()
+    if st.session_state.view == 'n':
+        st.divider(); st.markdown("#### Histórico de Notas"); st.table(data["Notas"])
+    elif st.session_state.view == 'f':
+        st.divider(); st.markdown("#### Relatório de Presença"); st.table(data["Frequência"])
+    elif st.session_state.view == 'q':
+        qr = load_image("qrcode.png")
+        if qr: 
+            st.divider()
+            _, qcol, _ = st.columns([1, 1, 1])
+            with qcol: st.image(qr, width=150)
