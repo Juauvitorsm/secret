@@ -27,37 +27,40 @@ def image_to_base64(image):
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
 
-# --- CSS DE ALTA FIDELIDADE: FIXAÇÃO E PADRONIZAÇÃO ---
+# --- CSS DE ALTA FIDELIDADE: OTIMIZAÇÃO MOBILE NO COMPUTADOR ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 
-    /* Fundo Escuro para contraste */
-    .main { background-color: #f0f2f5; }
+    /* Fundo Neutro para destaque do Bloco */
+    .main { background-color: #f4f6f9; }
 
-    /* FIXAR A TELA NO TOPO E PADRONIZAR LARGURA */
+    /* FIXAÇÃO DO CONTAINER CENTRAL (SIMULAÇÃO CELULAR) */
     .block-container { 
-        padding-top: 1rem !important; 
-        max-width: 500px !important; /* Tamanho ideal para não precisar de zoom */
+        padding-top: 1.5rem !important; 
+        max-width: 480px !important; /* Largura ideal para simetria */
         margin: auto;
-        padding-left: 10px !important;
-        padding-right: 10px !important;
+        background-color: transparent;
     }
 
-    /* Título e Linha */
-    .page-header {
+    /* Títulos e Elementos de Topo */
+    .header-text {
         text-align: center;
-        margin-bottom: 10px;
+        color: #1a237e;
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 12px;
+        text-transform: uppercase;
     }
-    .top-line {
-        height: 5px;
+    .top-accent {
+        height: 6px;
         background-color: #1a237e;
         width: 100%;
-        margin-bottom: 0px;
+        border-radius: 4px 4px 0 0;
     }
 
-    /* GRID DE BOTÕES: FORÇAR LADO A LADO E COLADO NA FOTO */
+    /* GRID DE BOTÕES: TOTALMENTE SIMÉTRICO E COLADO */
     [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -73,13 +76,13 @@ st.markdown("""
         padding: 0px !important;
     }
 
-    /* Estilo dos Botões: Texto Legível sem Zoom */
+    /* Botões: Estilo Bloco Profissional */
     div.stButton > button {
         width: 100% !important;
-        border-radius: 0px !important;
+        border-radius: 0px !important; /* Bordas retas para efeito de bloco */
         height: 48px !important;
         font-weight: 700 !important;
-        font-size: 0.75rem !important; /* Aumentado levemente para legibilidade */
+        font-size: 0.7rem !important;
         text-transform: uppercase !important;
         background-color: #ffffff !important;
         color: #1a237e !important;
@@ -92,7 +95,7 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Imagem: Travar Proporção */
+    /* Imagem: Encaixe Perfeito no Bloco */
     .stImage img {
         width: 100% !important;
         border-radius: 0px;
@@ -102,32 +105,32 @@ st.markdown("""
         border-top: none;
     }
 
-    /* CARDS DE SELEÇÃO DE USUÁRIO */
+    /* CARDS DE SELEÇÃO DE PERFIL */
     .profile-card {
         background: white;
-        border-radius: 12px;
-        padding: 15px;
+        border-radius: 10px;
+        padding: 12px;
         display: flex;
         align-items: center;
         gap: 15px;
-        margin-bottom: 10px;
-        border: 1px solid #ddd;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e0e4e8;
+        margin-bottom: 8px;
     }
-    .avatar {
-        width: 40px; height: 40px;
+    .avatar-icon {
+        width: 38px; height: 38px;
         background: #1a237e;
         color: white;
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        font-weight: 700;
+        font-weight: 700; font-size: 0.9rem;
     }
 
+    /* Esconder Lixo do Streamlit */
     #MainMenu, header, footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Navegação ---
+# --- Gestão de Estado ---
 if 'page' not in st.session_state: st.session_state.page = 'home'
 if 'img_idx' not in st.session_state: st.session_state.img_idx = 0
 if 'view_mode' not in st.session_state: st.session_state.view_mode = None
@@ -137,26 +140,25 @@ def navigate(page):
     st.session_state.img_idx = 0
     st.session_state.view_mode = None
 
-# --- Páginas ---
+# --- Fluxo de Telas ---
 
 if st.session_state.page == 'home':
-    st.markdown('<div style="height: 10vh;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height: 15vh;"></div>', unsafe_allow_html=True)
     logo = load_image("logo.png")
     if logo:
-        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{image_to_base64(logo)}" style="max-width:200px;"></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="text-align:center;"><img src="data:image/png;base64,{image_to_base64(logo)}" style="max-width:180px;"></div>', unsafe_allow_html=True)
     st.markdown('<br>', unsafe_allow_html=True)
-    st.button("ACESSAR SISTEMA", on_click=navigate, args=('login',))
+    st.button("ACESSAR PORTAL", on_click=navigate, args=('login',))
 
 elif st.session_state.page == 'login':
-    st.markdown('<h3 style="text-align:center; color:#1a237e;">IDENTIFIQUE-SE</h3>', unsafe_allow_html=True)
+    st.markdown('<div class="header-text">SELECIONE O ALUNO</div>', unsafe_allow_html=True)
     
     profiles = [("jean", "JEAM", "J"), ("thiago", "THIAGO", "T"), ("hemilly", "HEMILLY", "H")]
-    
     for key, name, initial in profiles:
         st.markdown(f'''
             <div class="profile-card">
-                <div class="avatar">{initial}</div>
-                <div style="font-weight:600;">ALUNO: {name}</div>
+                <div class="avatar-icon">{initial}</div>
+                <div style="font-weight:600; font-size:0.85rem; color:#333;">{name}</div>
             </div>
         ''', unsafe_allow_html=True)
         if st.button(f"ENTRAR COMO {name}", key=f"btn_{key}"):
@@ -164,50 +166,49 @@ elif st.session_state.page == 'login':
             st.rerun()
     
     st.markdown('<br>', unsafe_allow_html=True)
-    st.button("VOLTAR", on_click=navigate, args=('home',))
+    st.button("VOLTAR AO INÍCIO", on_click=navigate, args=('home',))
 
 elif st.session_state.page in ['jean', 'thiago', 'hemilly']:
     name_map = {"jean": "JEAM", "thiago": "THIAGO", "hemilly": "HEMILLY"}
     file_map = {"jean": ["1.png", "2.png"], "thiago": ["3.png", "4.png"], "hemilly": ["5.png", "6.png"]}
     current_user = st.session_state.page
     
-    # Cabeçalho Fixo
-    st.markdown(f'<div class="page-header"><span style="font-weight:700; font-size:0.9rem;">PRONTUÁRIO: {name_map[current_user]}</span></div>', unsafe_allow_html=True)
-    st.markdown('<div class="top-line"></div>', unsafe_allow_html=True)
+    # Estrutura do Bloco de Prontuário
+    st.markdown(f'<div class="header-text">PRONTUÁRIO: {name_map[current_user]}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="top-accent"></div>', unsafe_allow_html=True)
     
-    # Imagem
+    # Imagem (Central do Bloco)
     images = [load_image(f, rotate_degrees=90) for f in file_map[current_user]]
     if images[st.session_state.img_idx]:
         st.image(images[st.session_state.img_idx], use_container_width=True)
 
-    # Botões de Navegação (ANTERIOR / PRÓXIMO)
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("ANTERIOR"):
+    # Navegação Simétrica (ANTERIOR / PRÓXIMO)
+    n1, n2 = st.columns(2)
+    with n1:
+        if st.button("← ANTERIOR"):
             st.session_state.img_idx = (st.session_state.img_idx - 1) % len(images); st.rerun()
-    with c2:
-        if st.button("PRÓXIMO"):
+    with n2:
+        if st.button("PRÓXIMO →"):
             st.session_state.img_idx = (st.session_state.img_idx + 1) % len(images); st.rerun()
 
-    # Botões de Função (FREQ / NOTAS / QR / SAIR)
+    # Funções Simétricas (FREQ / NOTAS / QR / SAIR)
     f1, f2, f3, f4 = st.columns(4)
     with f1:
         if st.button("FREQ."): st.session_state.view_mode = 'freq'; st.rerun()
     with f2:
         if st.button("NOTAS"): st.session_state.view_mode = 'notas'; st.rerun()
     with f3:
-        if st.button("QR CODE"): st.session_state.view_mode = 'qr'; st.rerun()
+        if st.button("QR"): st.session_state.view_mode = 'qr'; st.rerun()
     with f4:
         if st.button("SAIR"): navigate('login'); st.rerun()
 
-    # Área de Dados (Abaixo do bloco fixo)
+    # Área de Dados (Expansível abaixo do bloco)
     if st.session_state.view_mode:
         st.divider()
         if st.session_state.view_mode == 'qr':
             qr = load_image("qrcode.png")
             if qr:
-                _, qc, _ = st.columns([1, 1, 1])
+                _, qc, _ = st.columns([1, 1.5, 1])
                 with qc: st.image(qr, use_container_width=True)
         else:
-            st.info(f"Visualizando: {st.session_state.view_mode.upper()}")
-
+            st.info(f"MODO: {st.session_state.view_mode.upper()}")
